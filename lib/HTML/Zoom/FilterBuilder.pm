@@ -42,13 +42,17 @@ sub set_attribute {
 
 sub _parse_attribute_args {
   my $self = shift;
-  # allow ->add_attribute(name => 'value')
-  #    or ->add_attribute({ name => 'name', value => 'value' })
+  # allow ->add_to_attribute(name => 'value')
+  #    or ->add_to_attribute({ name => 'name', value => 'value' })
   my ($name, $value) = @_ > 1 ? @_ : @{$_[0]}{qw(name value)};
   return ($name, $self->_zconfig->parser->html_escape($value));
 }
 
 sub add_attribute {
+    die "renamed to add_to_attribute. killing this entirely for 1.0";
+}
+
+sub add_to_attribute {
   my $self = shift;
   my ($name, $value) = $self->_parse_attribute_args(@_);
   sub {
@@ -193,6 +197,20 @@ sub replace {
     my ($evt, $stream) = @_;
     my $emit = $self->_stream_from_proto($replace_with);
     my $coll = &$coll_proto;
+    # if we're replacing the contents of an in place close
+    # then we need to handle that here
+    if ($options->{content}
+        && ref($coll) eq 'HASH'
+        && $coll->{is_in_place_close}
+      ) {
+      my $close = $stream->next;
+      # shallow copy and nuke in place and raw (to force smart print)
+      $_ = { %$_ }, delete @{$_}{qw(is_in_place_close raw)} for ($coll, $close);
+      $emit = $self->_stream_concat(
+                $emit,
+                $self->_stream_from_array($close),
+              );
+    }
     # For a straightforward replace operation we can, in fact, do the emit
     # -before- the collect, and my first cut did so. However in order to
     # use the captured content in generating the new content, we need
@@ -201,9 +219,11 @@ sub replace {
     # for the difference to be noticeable
     return
       ($coll
-        ? (ref $coll eq 'ARRAY'
+        ? (ref $coll eq 'ARRAY' # [ event, stream ]
             ? [ $coll->[0], $self->_stream_concat($coll->[1], $emit) ]
-            : $self->_stream_concat($coll, $emit)
+            : (ref $coll eq 'HASH' # event or stream?
+                 ? [ $coll, $emit ]
+                 : $self->_stream_concat($coll, $emit))
           )
         : $emit
       );
@@ -259,3 +279,200 @@ sub repeat_content {
 }
 
 1;
+
+=head1 NAME
+
+HTML::Zoom::FilterBuilder - Add Filters to a Stream
+
+=head1 SYNOPSIS
+
+Create an L<HTML::Zoom> instance:
+
+  use HTML::Zoom;
+  my $root = HTML::Zoom
+      ->from_html(<<MAIN);
+  <html>
+    <head>
+      <title>Default Title</title>
+    </head>
+    <body bad_attr='junk'>
+      Default Content
+    </body>
+  </html>
+  MAIN
+
+Create a new attribute on the  C<body> tag:
+
+  $root = $root
+    ->select('body')
+    ->set_attribute(class=>'main');
+
+Add a extra value to an existing attribute:
+
+  $root = $root
+    ->select('body')
+    ->add_to_attribute(class=>'one-column');
+
+Set the content of the C<title> tag:
+
+  $root = $root
+    ->select('title')
+    ->replace_content('Hello World');
+
+Set content from another L<HTML::Zoom> instance:
+
+  my $body = HTML::Zoom
+      ->from_html(<<BODY);
+  <div id="stuff">
+      <p>Well Now</p>
+      <p id="p2">Is the Time</p>
+  </div>
+  BODY
+
+  $root = $root
+    ->select('body')
+    ->replace_content($body);
+
+Set an attribute on multiple matches:
+
+  $root = $root
+    ->select('p')
+    ->set_attribute(class=>'para');
+
+Remove an attribute:
+
+  $root = $root
+    ->select('body')
+    ->remove_attribute('bad_attr');
+
+will produce:
+
+=begin testinfo
+
+  my $output = $root->to_html;
+  my $expect = <<HTML;
+
+=end testinfo
+
+  <html>
+    <head>
+      <title>Hello World</title>
+    </head>
+    <body class="main one-column"><div id="stuff">
+      <p class="para">Well Now</p>
+      <p id="p2" class="para">Is the Time</p>
+  </div>
+  </body>
+  </html>
+
+=begin testinfo
+
+  HTML
+  is($output, $expect, 'Synopsis code works ok');
+
+=end testinfo
+
+=head1 DESCRIPTION
+
+Given a L<HTML::Zoom> stream, provide methods to apply filters which
+alter the content of that stream.
+
+=head1 METHODS
+
+This class defines the following public API
+
+=head2 set_attribute ( $attr=>value | {name=>$attr,value=>$value} )
+
+Sets an attribute of a given name to a given value for all matching selections.
+
+    $html_zoom
+      ->select('p')
+      ->set_attribute(class=>'paragraph')
+      ->select('div')
+      ->set_attribute(name=>'class', value=>'divider');
+
+
+Overrides existing values, if such exist.  When multiple L</set_attribute>
+calls are made against the same or overlapping selection sets, the final
+call wins.
+
+=head2 add_to_attribute ( $attr=>value | {name=>$attr,value=>$value} )
+
+Adds a value to an existing attribute, or creates one if the attribute does not
+yet exist.
+
+    $html_zoom
+      ->select('p')
+      ->set_attribute(class=>'paragraph')
+      ->then
+      ->add_to_attribute(name=>'class', value=>'divider');
+
+Attributes with more than one value will have a dividing space.
+
+=head2 remove_attribute ( $attr | {name=>$attr} )
+
+Removes an attribute and all its values.
+
+    $html_zoom
+      ->select('p')
+      ->set_attribute(class=>'paragraph')
+      ->then
+      ->remove_attribute('class');
+
+Removes attributes from the original stream or events already added.
+
+=head2 collect
+
+    TBD
+
+=head2 collect_content
+
+    TBD
+
+=head2 add_before
+
+    TBD
+
+=head2 add_after
+
+    TBD
+
+=head2 prepend_content
+
+    TBD
+
+=head2 append_content
+
+    TBD
+
+=head2 replace
+
+    TBD
+
+=head2 replace_content
+
+Given a L<HTML::Zoom/select> result, replace the content with a string, array
+or another L<HTML::Zoom> object.
+
+=head2 repeat
+
+    TBD
+
+=head2 repeat_content
+
+    TBD
+
+=head1 ALSO SEE
+
+L<HTML::Zoom>
+
+=head1 AUTHORS
+
+See L<HTML::Zoom> for authors.
+
+=head1 LICENSE
+
+See L<HTML::Zoom> for the license.
+
+=cut
+

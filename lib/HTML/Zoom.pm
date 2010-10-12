@@ -1,14 +1,14 @@
 package HTML::Zoom;
 
-use 5.008001;
 use strict;
 use warnings FATAL => 'all';
 
 use HTML::Zoom::ZConfig;
-use HTML::Zoom::MatchWithoutFilter;
 use HTML::Zoom::ReadFH;
+use HTML::Zoom::Transform;
+use HTML::Zoom::TransformBuilder;
 
-our $VERSION = '0.009001';
+our $VERSION = '0.009002';
 
 $VERSION = eval $VERSION;
 
@@ -29,11 +29,16 @@ sub _with {
   bless({ %{$_[0]}, %{$_[1]} }, ref($_[0]));
 }
 
-sub from_html {
+sub from_events {
   my $self = shift->_self_or_new;
   $self->_with({
-    initial_events => $self->zconfig->parser->html_to_events($_[0])
+    initial_events => shift,
   });
+}
+
+sub from_html {
+  my $self = shift->_self_or_new;
+  $self->from_events($self->zconfig->parser->html_to_events($_[0]))
 }
 
 sub from_file {
@@ -48,9 +53,7 @@ sub to_stream {
     unless $self->{initial_events};
   my $sutils = $self->zconfig->stream_utils;
   my $stream = $sutils->stream_from_array(@{$self->{initial_events}});
-  foreach my $filter_spec (@{$self->{filters}||[]}) {
-    $stream = $sutils->wrap_with_filter($stream, @{$filter_spec});
-  }
+  $stream = $_->apply_to_stream($stream) for @{$self->{transforms}||[]};
   $stream
 }
 
@@ -58,9 +61,14 @@ sub to_fh {
   HTML::Zoom::ReadFH->from_zoom(shift);
 }
 
+sub to_events {
+  my $self = shift;
+  [ $self->zconfig->stream_utils->stream_to_array($self->to_stream) ];
+}
+
 sub run {
   my $self = shift;
-  $self->zconfig->stream_utils->stream_to_array($self->to_stream);
+  $self->to_events;
   return
 }
 
@@ -80,22 +88,37 @@ sub memoize {
   ref($self)->new($self)->from_html($self->to_html);
 }
 
+sub with_transform {
+  my $self = shift->_self_or_new;
+  my ($transform) = @_;
+  $self->_with({
+    transforms => [
+      @{$self->{transforms}||[]},
+      $transform
+    ]
+  });
+}
+  
 sub with_filter {
   my $self = shift->_self_or_new;
   my ($selector, $filter) = @_;
-  my $match = $self->parse_selector($selector);
-  $self->_with({
-    filters => [ @{$self->{filters}||[]}, [ $match, $filter ] ]
-  });
+  $self->with_transform(
+    HTML::Zoom::Transform->new({
+      zconfig => $self->zconfig,
+      selector => $selector,
+      filters => [ $filter ]
+    })
+  );
 }
 
 sub select {
   my $self = shift->_self_or_new;
   my ($selector) = @_;
-  my $match = $self->parse_selector($selector);
-  return HTML::Zoom::MatchWithoutFilter->construct(
-    $self, $match, $self->zconfig->filter_builder,
-  );
+  return HTML::Zoom::TransformBuilder->new({
+    zconfig => $self->zconfig,
+    selector => $selector,
+    proto => $self
+  });
 }
 
 # There's a bug waiting to happen here: if you do something like
@@ -111,15 +134,9 @@ sub select {
 
 sub then {
   my $self = shift;
-  die "Can't call ->then without a previous filter"
-    unless $self->{filters};
-  $self->select($self->{filters}->[-1][0]);
-}
-
-sub parse_selector {
-  my ($self, $selector) = @_;
-  return $selector if ref($selector); # already a match sub
-  $self->zconfig->selector_parser->parse_selector($selector);
+  die "Can't call ->then without a previous transform"
+    unless $self->{transforms};
+  $self->select($self->{transforms}->[-1]->selector);
 }
 
 1;
@@ -285,16 +302,16 @@ cleanly:
     map { my $field = $_; sub {
 
      $_->select('label')
-       ->add_attribute( for => $field->{id} )
+       ->add_to_attribute( for => $field->{id} )
        ->then
        ->replace_content( $field->{label} )
 
        ->select('input')
-       ->add_attribute( name => $field->{name} )
+       ->add_to_attribute( name => $field->{name} )
        ->then
-       ->add_attribute( type => $field->{type} )
+       ->add_to_attribute( type => $field->{type} )
        ->then
-       ->add_attribute( value => $field->{value} )
+       ->add_to_attribute( value => $field->{value} )
 
     } } @fields
   ]);
@@ -349,7 +366,7 @@ HTML::Zoom does its best to defer doing anything until it's absolutely
 required. The only point at which it descends into state is when you force
 it to create a stream, directly by:
 
-  my $stream = $zoom->as_stream;
+  my $stream = $zoom->to_stream;
 
   while (my $evt = $stream->next) {
     # handle zoom event here
@@ -675,7 +692,7 @@ In normal usage, you probably don't need to call this yourself.
 
   my $z2 = $z1->select('div')->replace_content('I AM A DIV!');
 
-Returns an intermediary object of the class L<HTML::Zoom::MatchWithoutFilter>
+Returns an intermediary object of the class L<HTML::Zoom::TransformBuilder>
 on which methods of your L<HTML::Zoom::FilterBuilder> object can be called.
 
 In normal usage you should generally always put the pair of method calls
@@ -683,40 +700,25 @@ together; the intermediary object isn't designed or expected to stick around.
 
 =head2 then
 
-  my $z2 = $z1->select('div')->add_attribute(class => 'spoon')
+  my $z2 = $z1->select('div')->add_to_attribute(class => 'spoon')
                              ->then
                              ->replace_content('I AM A DIV!');
 
 Re-runs the previous select to allow you to chain actions together on the
 same selector.
 
-=head2 parse_selector
+=head1 AUTHORS
 
-  my $matcher = $zoom->parse_selector('div');
+=over
 
-Used by L</select> and L</with_filter> to invoke the current
-L<HTML::Zoom::SelectorParser> object to create a matcher object (currently
-a coderef but this is an implementation detail) for that selector.
+=item * Matt S. Trout
 
-In normal usage, you probably don't need to call this yourself.
-
-=head1 AUTHOR
-
-Matt S. Trout (mst) <mst@shadowcat.co.uk>
-
-=head2 CONTRIBUTORS
-
-None as yet, though I probably owe lots of people thanks for ideas. Yet
-another doc nit to fix.
-
-=head1 COPYRIGHT
-
-Copyright (c) 2009 - 2010 the HTML::Zoom L</AUTHOR> and L</CONTRIBUTORS>
-as listed above.
+=back
 
 =head1 LICENSE
 
-This library is free software and may be distributed under the same terms
-as perl itself.
+This library is free software, you can redistribute it and/or modify
+it under the same terms as Perl itself.
 
 =cut
+

@@ -1,13 +1,13 @@
 ---
 abstract: 'selector based streaming template engine'
 author:
-  - 'Matt S. Trout (mst) <mst@shadowcat.co.uk>'
+  - '=over'
 build_requires:
   ExtUtils::MakeMaker: 6.42
 configure_requires:
   ExtUtils::MakeMaker: 6.42
 distribution_type: module
-generated_by: 'Module::Install version 0.93'
+generated_by: 'Module::Install version 0.95'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -18,8 +18,6 @@ no_index:
   directory:
     - inc
     - t
-requires:
-  perl: 5.8.1
 resources:
   license: http://dev.perl.org/licenses/
-version: 0.009001
+version: 0.009002

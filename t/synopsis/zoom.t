@@ -3,6 +3,7 @@ use warnings FATAL => 'all';
 use Test::More qw(no_plan);
 
 use HTML::Zoom;
+
 my $template = <<HTML;
 <html>
   <head>
@@ -20,6 +21,7 @@ my $template = <<HTML;
   </body>
 </html>
 HTML
+
 my $output = HTML::Zoom
   ->from_html($template)
   ->select('title, #greeting')->replace_content('Hello world & dog!')
@@ -41,6 +43,8 @@ my $output = HTML::Zoom
       { repeat_between => '.between' }
     )
   ->to_html;
+
+
 my $expect = <<HTML;
 <html>
   <head>
@@ -68,4 +72,5 @@ my $expect = <<HTML;
   </body>
 </html>
 HTML
-is($output, $expect, 'Synopsis code works ok');;
+is($output, $expect, 'Synopsis code works ok');
+

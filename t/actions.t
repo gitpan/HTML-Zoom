@@ -67,7 +67,7 @@ is(
 ($expect = $tmpl) =~ s/class="main"/class="main foo"/;
 
 is(
-  run_for { $_->add_attribute({ name => 'class', value => 'foo' }) },
+  run_for { $_->add_to_attribute({ name => 'class', value => 'foo' }) },
   $expect,
   'add attribute on existing attribute'
 );
@@ -75,7 +75,7 @@ is(
 ($expect = $tmpl) =~ s/class="main"/class="main" foo="bar"/;
 
 is(
-  run_for { $_->add_attribute({ name => 'foo', value => 'bar' }) },
+  run_for { $_->add_to_attribute({ name => 'foo', value => 'bar' }) },
   $expect,
   'add attribute on non existing attribute'
 );
@@ -268,12 +268,12 @@ is(
     $_->repeat_content(
       [
         sub {
-          HTML::Zoom::CodeStream->from_array(
+          HTML::Zoom::ArrayStream->new({ array => [
             (filter
               filter($_ => '.name' => $r_content->('mst'))
               => '.career' => $r_content->('Chainsaw Wielder')),
-            HTML::Zoom::CodeStream->from_array(@between)
-          )->flatten
+            HTML::Zoom::ArrayStream->new({ array => \@between })
+          ] })->flatten
         },
         sub {
           filter
