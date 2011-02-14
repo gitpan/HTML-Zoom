@@ -80,6 +80,28 @@ sub _raw_parse_simple_selector {
         }
       };
 
+    # '[attr~=bar]' - match attribute contains word
+    /\G\[$sel_re~=$match_value_re\]/gc and
+      return do {
+        my $attribute = $1;
+        my $value = $2;
+        sub {
+          $_[0]->{attrs}{$attribute}
+          && $_[0]->{attrs}{$attribute} =~ qr/\b\Q$value\E\b/;
+        }
+      };
+
+    # '[attr!=bar]' - match attribute contains prefix (for language matches)
+    /\G\[$sel_re\|=$match_value_re\]/gc and
+      return do {
+        my $attribute = $1;
+        my $value = $2;
+        sub {
+          $_[0]->{attrs}{$attribute}
+          && $_[0]->{attrs}{$attribute} =~ qr/^\Q$value\E(?:-|$)/;
+        }
+      };
+
     # '[attr=bar]' - match attributes
     /\G\[$sel_re=$match_value_re\]/gc and
       return do {
@@ -91,14 +113,30 @@ sub _raw_parse_simple_selector {
         }
       };
 
-    # '[attr] - match attribute being present:
+    # '[attr!=bar]' - attributes doesn't match
+    /\G\[$sel_re!=$match_value_re\]/gc and
+      return do {
+        my $attribute = $1;
+        my $value = $2;
+        sub {
+          ! ($_[0]->{attrs}{$attribute}
+          && $_[0]->{attrs}{$attribute} eq $value);
+        }
+      };
+
+    # '[attr]' - match attribute being present:
     /\G\[$sel_re\]/gc and
       return do {
         my $attribute = $1;
         sub {
           exists $_[0]->{attrs}{$attribute};
         }
-      }
+    };
+    
+    # none of the above matched, try catching some obvious errors:
+
+    # indicate unmatched square bracket:
+    /\G\[[^\]]*/gc and $_[0]->_blam('Unmatched [');
   }
 }
 

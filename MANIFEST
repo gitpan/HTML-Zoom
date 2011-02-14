@@ -1,12 +1,4 @@
 Changes
-inc/Module/Install.pm
-inc/Module/Install/Base.pm
-inc/Module/Install/Can.pm
-inc/Module/Install/Fetch.pm
-inc/Module/Install/Makefile.pm
-inc/Module/Install/Metadata.pm
-inc/Module/Install/Win32.pm
-inc/Module/Install/WriteAll.pm
 lib/HTML/Zoom.pm
 lib/HTML/Zoom/ArrayStream.pm
 lib/HTML/Zoom/CodeStream.pm
@@ -27,16 +19,22 @@ lib/HTML/Zoom/Transform.pm
 lib/HTML/Zoom/TransformBuilder.pm
 lib/HTML/Zoom/TransformedStream.pm
 lib/HTML/Zoom/ZConfig.pm
+maint/Makefile.PL.include
 maint/synopsis-extractor
 Makefile.PL
 MANIFEST			This list of files
-META.yml
+README
 t/actions.t
+t/apply.t
 t/balance.t
+t/bugs/repeat_replace_on_empty_tag.t
+t/bugs/void_element.t
 t/doctype.t
+t/flush.t
 t/forms.t
 t/selectors.t
 t/span.t
 t/synopsis/filterbuilder.t
 t/synopsis/zoom.t
 t/todo-repeat.t
+META.yml                                 Module meta-data (added by MakeMaker)
