@@ -1,28 +1,47 @@
+0.009005 2011-05-12
+
+  - Perforce escaping of meta-characters in selectors and test (rafl)
+  - New Feature:  HTML::Zoom will autoload FilterBuilder functions so that
+    you can avoid a bit of boilerplate in method calls.  Now you can replace:
+
+        $z->select('div')->replace_content("Hello World");
+
+    With:
+
+        $z->replace_content(div => "Hello World");
+
+  - Lots of changes to FilterBuilder so that functionality matched the docs
+    better, improved the docs and added tests for documented functions to
+    avoid future regressions.
+
+  - add / to excluded characters in attribute names to correctly parse <br/>
+  - add transform_attribute method (rbuels)
+
 0.009004 2011-02-14
 
-- Large chunks of documentation improvements from jnareb
-- apply_if method from ocharles
-- selector improvements and bugfixes (jnareb, mst)
+  - Large chunks of documentation improvements from jnareb
+  - apply_if method from ocharles
+  - selector improvements and bugfixes (jnareb, mst)
 
 0.009003 2010-10-12
 
-- mst is an idiot and forgot to add strictures.pm as a dependency
+  - mst is an idiot and forgot to add strictures.pm as a dependency
 
 0.009002 2010-10-12
 
-- Added support for more selector syntax support including: 
-    element#id
-    element.class
-    element[attr=foo]
-    element[attr*=foo]
-    element[attr~=foo]
-    element[attr]
-    element[attr^=foo]
-    [attr=foo]
-- HTML::Zoom::MatchWithoutFilter replaced by HTML::Zoom::TransformBuilder
-- Improved documentation, including documentation for HTML::Zoom::FilterBuilder.
-- Lots of other refactoring, internal improvements & bugfixes!
+  - Added support for more selector syntax support including:
+      element#id
+      element.class
+      element[attr=foo]
+      element[attr*=foo]
+      element[attr~=foo]
+      element[attr]
+      element[attr^=foo]
+      [attr=foo]
+  - HTML::Zoom::MatchWithoutFilter replaced by HTML::Zoom::TransformBuilder
+  - Improved documentation, including documentation for HTML::Zoom::FilterBuilder.
+  - Lots of other refactoring, internal improvements & bugfixes!
 
 0.009001 2010-03-17
 
-- First release
+  - First release

@@ -67,8 +67,8 @@ SYNOPSIS
               <p>Name: <span class="name">Epitaph</span></p>
               <p>Age: <span class="age">&lt;redacted&gt;</span></p>
             </span>
-            
-      </div>
+        
+          </div>
         </body>
       </html>
 
@@ -199,8 +199,8 @@ DESCRIPTION
     transforms to re-use, HTML::Zoom provides an 'apply' method:
 
       my $add_name = sub { $_->select('.name')->replace_content($name) };
-     
-  my $same_as_z2 = $z1->apply($add_name);
+ 
+      my $same_as_z2 = $z1->apply($add_name);
 
   LAZINESS IS A VIRTUE
     HTML::Zoom does its best to defer doing anything until it's absolutely
@@ -534,6 +534,19 @@ METHODS
     Re-runs the previous select to allow you to chain actions together on
     the same selector.
 
+AUTOLOAD METHODS
+    HTML::Zoom AUTOLOADS methods against "select" so that you can reduce a
+    certain amount of boilerplate typing. This allows you to replace:
+
+      $z->select('div')->replace_content("Hello World");
+
+    With:
+
+      $z->replace_content(div => "Hello World");
+
+    Besides saving a few keys per invocations, you may feel this looks
+    neater in your code and increases understanding.
+
 AUTHOR
     mst - Matt S. Trout (cpan:MSTROUT) <mst@shadowcat.co.uk>
 
@@ -547,6 +560,8 @@ CONTRIBUTORS
     Joe Highton
 
     John Napiorkowski
+
+    Robert Buels
 
 COPYRIGHT
     Copyright (c) 2010-2011 the HTML::Zoom "AUTHOR" and "CONTRIBUTORS" as
