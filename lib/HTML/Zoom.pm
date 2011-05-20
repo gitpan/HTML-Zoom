@@ -8,7 +8,7 @@ use HTML::Zoom::Transform;
 use HTML::Zoom::TransformBuilder;
 use Scalar::Util ();
 
-our $VERSION = '0.009005';
+our $VERSION = '0.009006';
 
 $VERSION = eval $VERSION;
 
@@ -161,6 +161,8 @@ sub AUTOLOAD {
     die "We can't do $meth on ->select('$selector')";
   }
 }
+
+sub DESTROY {}
 
 1;
 
