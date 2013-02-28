@@ -9,7 +9,7 @@ use HTML::Zoom::FilterStream;
 
 my $tmpl = <<END;
 <body>
-  <div class="main">
+  <div name="cow" class="main">
     <span class="hilight name">Bob</span>
     <span class="career">Builder</span>
     <hr />
@@ -55,6 +55,14 @@ is(
   'set attribute on existing attribute'
 );
 
+($expect = $tmpl) =~ s/name="cow" class="main"/name="bar" class="foo"/;
+
+is(
+  run_for { $_->set_attr({ 'class' => 'foo', 'name' => 'bar'}) },
+  $expect,
+  'set attributes using hashref form (shorthand)'
+);
+
 ($expect = $tmpl) =~ s/class="main"/class="main" foo="bar"/;
 
 is(
@@ -69,6 +77,22 @@ is(
   run_for { $_->add_to_attribute( 'class' => 'foo' ) },
   $expect,
   'add attribute on existing attribute'
+);
+
+($expect = $tmpl) =~ s/class="main"/class="main foo"/;
+
+is(
+  run_for { $_->add_class('foo') },
+  $expect,
+  'add attribute on existing attribute (shorthand)'
+);
+
+($expect = $tmpl) =~ s/class="main"/class="main" id="foo"/;
+
+is(
+  run_for { $_->set_id('foo') },
+  $expect,
+  'set_id (shorthand)'
 );
 
 ($expect = $tmpl) =~ s/class="main"/class="main" foo="bar"/;
@@ -91,6 +115,28 @@ is(
   run_for { $_->remove_attribute({ name => 'foo' }) },
   $tmpl,
   'remove attribute on non existing attribute'
+);
+
+($expect = $tmpl) =~ s/class="main"/class=""/;
+
+is(
+  run_for { $_->remove_from_attribute({ class => 'main' }) },
+  $expect,
+  'remove name from attribute'
+);
+
+is(
+  run_for { $_->remove_from_attribute({ madeup => 'main' }) },
+  $tmpl,
+  'remove name from non existing attribute (ignored)'
+);
+
+($expect = $tmpl) =~ s/class="main"/class=""/;
+
+is(
+  run_for { $_->remove_class( 'main' ) },
+  $expect,
+  'remove_class'
 );
 
 ($expect = $tmpl) =~ s/ class="main"//;
@@ -207,7 +253,7 @@ is(
 
 is(
   HTML::Zoom::Producer::BuiltIn->html_from_events(\@ev),
-  '<div class="main">
+  '<div name="cow" class="main">
     <span class="hilight name">Bob</span>
     <span class="career">Builder</span>
     <hr />
@@ -220,7 +266,7 @@ is(
 is(
   run_for { $_->collect({ into => \@ev, content => 1 }) },
   '<body>
-  <div class="main"></div>
+  <div name="cow" class="main"></div>
 </body>
 ',
   'collect w/content removes correctly'
@@ -239,7 +285,7 @@ is(
 is(
   run_for { $_->replace($ohai, { content => 1 }) },
   '<body>
-  <div class="main">O HAI</div>
+  <div name="cow" class="main">O HAI</div>
 </body>
 ',
   'replace w/content'
@@ -273,11 +319,11 @@ is(
     )
   },
   q{<body>
-  <div class="main">
+  <div name="cow" class="main">
     <span class="hilight name">mst</span>
     <span class="career">Chainsaw Wielder</span>
     <hr />
-  </div><div class="main">
+  </div><div name="cow" class="main">
     <span class="hilight name">mdk</span>
     <span class="career">Adminion</span>
     <hr />
@@ -305,7 +351,7 @@ is(
     )
   },
   q{<body>
-  <div class="main">
+  <div name="cow" class="main">
     <span class="hilight name">mst</span>
     <span class="career">Chainsaw Wielder</span>
     <hr />
@@ -345,7 +391,7 @@ is(
     )
   },
   q{<body>
-  <div class="main">
+  <div name="cow" class="main">
     <span class="hilight name">mst</span>
     <span class="career">Chainsaw Wielder</span>
     <hr />
@@ -378,7 +424,7 @@ is(
     )
   },
   q{<body>
-  <div class="main">
+  <div name="cow" class="main">
     <span class="hilight name">mst</span>
     <span class="career">Chainsaw Wielder</span>
     <hr />

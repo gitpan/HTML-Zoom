@@ -1,7 +1,6 @@
-0.009008_01 2013-02-28
-
-  - remove_from_attribute and related helpers (remove_class, add_class)
-
+<<<<<<< HEAD
+=======
+0.009008 2013-02-28
   - Several patches for incorrect functionality (thanks to Jim Miner &
     stratman@gmail.com) :-
 
@@ -21,6 +20,7 @@
 0.009006 2011-05-20
   - Add DESTROY method to fix test failures / warnings in perl >= 5.13.1
 
+>>>>>>> master
 0.009005 2011-05-12
 
   - Perforce escaping of meta-characters in selectors and test (rafl)

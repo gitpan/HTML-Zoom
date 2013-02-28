@@ -15,4 +15,4 @@ name: HTML-Zoom
 requires:
   Test::More: 0
   strictures: 0
-version: 0.009007
+version: 0.009008_01

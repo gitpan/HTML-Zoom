@@ -8,7 +8,7 @@ use HTML::Zoom::Transform;
 use HTML::Zoom::TransformBuilder;
 use Scalar::Util ();
 
-our $VERSION = '0.009007';
+our $VERSION = '0.009008_01';
 
 $VERSION = eval $VERSION;
 
@@ -155,7 +155,19 @@ sub AUTOLOAD {
   my $sel = $self->select($selector);
   my $meth = our $AUTOLOAD;
   $meth =~ s/.*:://;
-  if(my $cr = $sel->_zconfig->filter_builder->can($meth)) {
+  if (ref($selector) eq 'HASH') {
+    my $ret = $self;
+    $ret = $ret->_do($_, $meth, @{$selector->{$_}}) for keys %$selector;
+    $ret;
+  } else {
+    $self->_do($selector, $meth, @args);
+  }
+}
+
+sub _do {
+  my ($self, $selector, $meth, @args) = @_;
+  my $sel = $self->select($selector);
+  if( my $cr = $sel->_zconfig->filter_builder->can($meth)) {
     return $sel->$meth(@args);
   } else {
     die "We can't do $meth on ->select('$selector')";
@@ -201,13 +213,14 @@ HTML::Zoom - selector based streaming template engine
             $_->select('.name')->replace_content('Matt')
               ->select('.age')->replace_content('26')
           },
+          # alternate form
           sub {
-            $_->select('.name')->replace_content('Mark')
-              ->select('.age')->replace_content('0x29')
+            $_->replace_content({'.name' => ['Mark'],'.age' => ['0x29'] })
           },
+          #alternate alternate form
           sub {
-            $_->select('.name')->replace_content('Epitaph')
-              ->select('.age')->replace_content('<redacted>')
+            $_->replace_content('.name' => 'Epitaph')
+              ->replace_content('.age' => '<redacted>')
           },
         ],
         { repeat_between => '.between' }
@@ -330,14 +343,12 @@ cleanly:
        ->add_to_attribute( for => $field->{id} )
        ->then
        ->replace_content( $field->{label} )
-
-       ->select('input')
-       ->add_to_attribute( name => $field->{name} )
-       ->then
-       ->add_to_attribute( type => $field->{type} )
-       ->then
-       ->add_to_attribute( value => $field->{value} )
-
+       ->add_to_attribute(
+        input => { 
+         name => $field->{name},
+         type => $field->{type},
+         value => $field->{value}
+       })
     } } @fields
   ]);
 

@@ -100,11 +100,23 @@ sub to_html {
 
 sub AUTOLOAD {
   my ($self, $selector, @args) = @_;
+  my $sel = $self->select($selector);
   my $meth = our $AUTOLOAD;
   $meth =~ s/.*:://;
-  return $self = $self->select($selector)->$meth(@args);
+  if (ref($selector) eq 'HASH') {
+    my $ret = $self;
+    $ret = $ret->_do($_, $meth, @{$selector->{$_}}) for keys %$selector;
+    $ret;
+  } else {
+    $self->_do($selector, $meth, @args);
+  }
+}
+
+sub _do {
+  my ($self, $selector, $meth, @args) = @_;
+  return $self->select($selector)->$meth(@args);
 }
 
 sub DESTROY {}
-  
+
 1;

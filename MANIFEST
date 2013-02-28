@@ -1,4 +1,5 @@
 Changes
+Changes.orig
 LICENSE
 MANIFEST
 META.yml
@@ -17,15 +18,18 @@ lib/HTML/Zoom.pm
 lib/HTML/Zoom/ArrayStream.pm
 lib/HTML/Zoom/CodeStream.pm
 lib/HTML/Zoom/FilterBuilder.pm
+lib/HTML/Zoom/FilterBuilder.pm.orig
 lib/HTML/Zoom/FilterBuilder/Template.pm
 lib/HTML/Zoom/FilterStream.pm
 lib/HTML/Zoom/FlattenedStream.pm
 lib/HTML/Zoom/MappedStream.pm
 lib/HTML/Zoom/MaybeDebug.pm
 lib/HTML/Zoom/Parser/BuiltIn.pm
+lib/HTML/Zoom/Parser/BuiltIn.pm.orig
 lib/HTML/Zoom/Producer/BuiltIn.pm
 lib/HTML/Zoom/ReadFH.pm
 lib/HTML/Zoom/SelectorParser.pm
+lib/HTML/Zoom/SelectorParser.pm.orig
 lib/HTML/Zoom/StreamBase.pm
 lib/HTML/Zoom/StreamUtils.pm
 lib/HTML/Zoom/SubObject.pm
@@ -46,6 +50,7 @@ t/flush.t
 t/forms.t
 t/parse_cdata.t
 t/parser_weirdness.t
+t/plain_text.t
 t/repeat_bugfixes.t
 t/selectors.t
 t/span.t

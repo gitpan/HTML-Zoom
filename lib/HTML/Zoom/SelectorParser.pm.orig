@@ -55,7 +55,7 @@ sub _raw_parse_simple_selector {
         my $attribute = $_[0]->_unescape($1);
         my $value = $_[0]->_unescape($2);
         sub {
-          exists $_[0]->{attrs}{$attribute}
+          $_[0]->{attrs}{$attribute}
           && $_[0]->{attrs}{$attribute} =~ qr/^\Q$value\E/;
         }
       };
@@ -66,7 +66,7 @@ sub _raw_parse_simple_selector {
         my $attribute = $_[0]->_unescape($1);
         my $value = $_[0]->_unescape($2);
         sub {
-          exists $_[0]->{attrs}{$attribute}
+          $_[0]->{attrs}{$attribute}
           && $_[0]->{attrs}{$attribute} =~ qr/\Q$value\E$/;
         }
       };
@@ -77,7 +77,7 @@ sub _raw_parse_simple_selector {
         my $attribute = $_[0]->_unescape($1);
         my $value = $_[0]->_unescape($2);
         sub {
-          exists $_[0]->{attrs}{$attribute}
+          $_[0]->{attrs}{$attribute}
           && $_[0]->{attrs}{$attribute} =~ qr/\Q$value\E/;
         }
       };
@@ -88,7 +88,7 @@ sub _raw_parse_simple_selector {
         my $attribute = $_[0]->_unescape($1);
         my $value = $_[0]->_unescape($2);
         sub {
-          exists $_[0]->{attrs}{$attribute}
+          $_[0]->{attrs}{$attribute}
           && $_[0]->{attrs}{$attribute} =~ qr/\b\Q$value\E\b/;
         }
       };
@@ -99,7 +99,7 @@ sub _raw_parse_simple_selector {
         my $attribute = $_[0]->_unescape($1);
         my $value = $_[0]->_unescape($2);
         sub {
-          exists $_[0]->{attrs}{$attribute}
+          $_[0]->{attrs}{$attribute}
           && $_[0]->{attrs}{$attribute} =~ qr/^\Q$value\E(?:-|$)/;
         }
       };
@@ -110,7 +110,7 @@ sub _raw_parse_simple_selector {
         my $attribute = $_[0]->_unescape($1);
         my $value = $_[0]->_unescape($2);
         sub {
-          exists $_[0]->{attrs}{$attribute}
+          $_[0]->{attrs}{$attribute}
           && $_[0]->{attrs}{$attribute} eq $value;
         }
       };
@@ -121,7 +121,7 @@ sub _raw_parse_simple_selector {
         my $attribute = $_[0]->_unescape($1);
         my $value = $_[0]->_unescape($2);
         sub {
-          ! (exists $_[0]->{attrs}{$attribute}
+          ! ($_[0]->{attrs}{$attribute}
           && $_[0]->{attrs}{$attribute} eq $value);
         }
       };
@@ -208,3 +208,9 @@ ${hat} here\n";
 }
 
 1;
+
+__END__
+
+2011-12-23 Jim Miner
+Fix parsing of selectors matching against attribute value "" (empty).
+(This does not fix parsing of single-quoted attribute values.)

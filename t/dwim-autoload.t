@@ -304,4 +304,58 @@ sub code_stream (&) {
     'Got correct from repeat_content';
 }
 
+{
+  ok my $dwim = HTML::Zoom
+    ->from_html(q[<ul><li class="foo"></li><li class="bar"></li></ul>])
+    ->replace_content({
+      'li.foo' => ['foo'],
+      'li.bar' => ['bar'],
+    })->to_html;
+  is $dwim, '<ul><li class="foo">foo</li><li class="bar">bar</li></ul>',
+    'Hashref selectors (via replace_content)';
+}
+
+{
+  ok my $dwim = HTML::Zoom
+  ->from_html(q[<ul><li class="foo"></li><li class="bar"></li></ul>])
+    ->set_attribute({
+      'li.foo' => [ class => 'baz' ],
+      'li.bar' => [ class => 'qux' ],
+    })->to_html;
+  is $dwim, '<ul><li class="baz"></li><li class="qux"></li></ul>',
+    'Hashref selectors (via set_attribute)';
+}
+
+{
+  ok my $dwim = HTML::Zoom
+  ->from_html(q[<ul><li class="foo"></li><li class="bar"></li></ul>])
+  ->select('ul')->collect({ 
+  passthrough => 1,
+  filter => sub {
+      $_->set_attribute({
+        'li.foo' => [ class => 'baz' ],
+        'li.bar' => [ class => 'qux' ],
+      });
+    }
+  })->to_html;
+  is $dwim, '<ul><li class="baz"></li><li class="qux"></li></ul>',
+    'Hashref selectors on codestream';
+}
+
+{
+  ok my $dwim = HTML::Zoom
+  ->from_html(q[<ul><li class="foo" name="bar"></li><li class="bar"></li></ul>])
+  ->select('ul')->collect({ 
+  passthrough => 1,
+  filter => sub {
+      $_->set_attribute({
+        'li.foo' => [{ class => 'baz', name => 'moo', }],
+        'li.bar' => [ class => 'qux' ],
+      });
+    }
+  })->to_html;
+  is $dwim, '<ul><li class="baz" name="moo"></li><li class="qux"></li></ul>',
+    'Hashref selectors with hashref attributes on codestream';
+}
+
 done_testing;
